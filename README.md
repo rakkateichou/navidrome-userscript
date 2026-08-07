@@ -12,12 +12,15 @@ The button adopts each site's native controls. On SoundCloud's bottom player it 
 ## Install
 
 1. Install Tampermonkey or Violentmonkey.
-2. Open the [userscript install URL](https://raw.githubusercontent.com/rakkateichou/navidrome-userscript/master/navidrome.user.js).
-3. Confirm the installation in the userscript manager.
-4. Click the music-note button on YouTube or SoundCloud.
-5. Enter the server URL and browser access token when prompted.
+2. In Chrome 138 or newer, right-click Tampermonkey, choose **Manage extension**, and enable **Allow User Scripts**. On older Chrome versions, enable **Developer mode** on `chrome://extensions` instead.
+3. Open the [userscript install URL](https://raw.githubusercontent.com/rakkateichou/navidrome-userscript/master/navidrome.user.js).
+4. Confirm the installation and make sure **Add to Navidrome** is enabled in the userscript manager.
+5. Refresh YouTube or SoundCloud, then click the music-note button.
+6. Enter the server URL and browser access token when prompted.
 
 The token is saved only in the userscript manager's private storage. It is not included in this repository or in the update file. Settings can be reopened from the userscript manager menu as **Configure Navidrome connection**.
+
+If the button never appears, first recheck **Allow User Scripts** and that the script itself is enabled. Chrome does not run any Tampermonkey userscripts until that extra permission is granted.
 
 ## Security
 
