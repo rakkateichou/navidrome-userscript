@@ -14,7 +14,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.2\.0/);
+  assert.match(source, /@version\s+1\.3\.0/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -87,6 +87,12 @@ test("button markup provides idle and success icons", () => {
   assert.match(markup, /navidrome-add-label/);
 });
 
+test("DOM construction does not depend on innerHTML or TrustedHTML", () => {
+  assert.doesNotMatch(source, /\.innerHTML\s*=/);
+  assert.match(source, /createElementNS/);
+  assert.match(source, /replaceChildren\(createButtonContent\(\)\)/);
+});
+
 test("SoundCloud player delegates its surface and hover behavior to native classes", () => {
   assert.match(source, /soundcloudPlayerReferenceButton/);
   assert.match(source, /cloneNode\(false\)/);
@@ -101,6 +107,12 @@ test("userscript no longer depends on Chrome extension messaging", () => {
   assert.doesNotMatch(source, /chrome\.runtime/);
   assert.doesNotMatch(source, /chrome\.storage/);
   assert.match(source, /GM_addValueChangeListener/);
+});
+
+test("runtime health is exposed without leaking configuration", () => {
+  assert.match(source, /navidrome-userscript-runtime/);
+  assert.match(source, /markRuntime\("ready"\)/);
+  assert.doesNotMatch(source, /marker\.dataset\.token/);
 });
 
 test("public source never contains a Navidrome access token", () => {

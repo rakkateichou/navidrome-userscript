@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.2.0
+// @version      1.3.0
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -21,6 +21,7 @@
 // @grant        GM_addStyle
 // @grant        GM_addValueChangeListener
 // @grant        GM_getValue
+// @grant        GM_info
 // @grant        GM_notification
 // @grant        GM_registerMenuCommand
 // @grant        GM_setValue
@@ -34,6 +35,7 @@
   const DEFAULT_SERVER_URL = "https://bot.music.rkde.su";
   const BUTTON_CONTAINER_ID = "navidrome-userscript-add-container";
   const SETTINGS_DIALOG_ID = "navidrome-userscript-settings";
+  const RUNTIME_MARKER_ID = "navidrome-userscript-runtime";
   const CONFIG_KEY = "navidromeConfig";
   const TRACK_STATES_KEY = "navidromeTrackStates";
   const POLL_INTERVAL_MS = 2500;
@@ -458,6 +460,33 @@
     `;
   }
 
+  function createButtonContent() {
+    const namespace = "http://www.w3.org/2000/svg";
+    const fragment = document.createDocumentFragment();
+    const svg = document.createElementNS(namespace, "svg");
+    svg.classList.add("navidrome-add-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+
+    const paths = [
+      ["navidrome-add-note", "M12 3v11.2a3.7 3.7 0 1 0 2 3.3V8h5V3h-7Z"],
+      ["navidrome-add-plus", "M5.5 3v2.5H3v2h2.5V10h2V7.5H10v-2H7.5V3h-2Z"],
+      ["navidrome-add-check", "m9.2 19-5.8-5.8 1.8-1.8 4 4 9.6-9.6 1.8 1.8Z"],
+    ];
+    for (const [className, pathData] of paths) {
+      const path = document.createElementNS(namespace, "path");
+      path.classList.add(className);
+      path.setAttribute("d", pathData);
+      svg.append(path);
+    }
+
+    const label = document.createElement("span");
+    label.className = "navidrome-add-label";
+    label.textContent = "Add to Navidrome";
+    fragment.append(svg, label);
+    return fragment;
+  }
+
   function visibleYoutubeMoreButton() {
     return Array.from(
       document.querySelectorAll(
@@ -486,9 +515,9 @@
       );
       const nativeIcon = button.querySelector(".ytSpecButtonShapeNextIcon");
       if (nativeIcon) {
-        nativeIcon.innerHTML = buttonMarkup();
+        nativeIcon.replaceChildren(createButtonContent());
       } else {
-        button.innerHTML = buttonMarkup();
+        button.replaceChildren(createButtonContent());
       }
       button.removeAttribute("aria-expanded");
       button.removeAttribute("aria-haspopup");
@@ -509,11 +538,13 @@
         "navidrome-add-native-soundcloud-player",
       );
       button.removeAttribute("aria-describedby");
-      button.innerHTML = `<div>${buttonMarkup()}</div>`;
+      const nativeContent = document.createElement("div");
+      nativeContent.append(createButtonContent());
+      button.replaceChildren(nativeContent);
     } else {
       button = document.createElement("button");
       button.className = "navidrome-add-button";
-      button.innerHTML = buttonMarkup();
+      button.append(createButtonContent());
     }
     button.type = "button";
     button.addEventListener("click", addCurrentTrack);
@@ -593,6 +624,7 @@
       }
     }
     renderState();
+    markRuntime("ready");
   }
 
   function renderState() {
@@ -728,33 +760,49 @@
     const current = await getConfig();
     const dialog = document.createElement("dialog");
     dialog.id = SETTINGS_DIALOG_ID;
-    dialog.innerHTML = `
-      <form method="dialog">
-        <h2>Connect to Navidrome</h2>
-        <p>The access token stays in your userscript manager's private storage.</p>
-        <label>
-          Server URL
-          <input name="serverUrl" type="url" autocomplete="url" required>
-        </label>
-        <label>
-          Access token
-          <input name="token" type="password" autocomplete="off" minlength="32" required>
-        </label>
-        <div class="navidrome-settings-status" role="status"></div>
-        <div class="navidrome-settings-actions">
-          <button value="cancel" type="button">Cancel</button>
-          <button type="submit">Test and save</button>
-        </div>
-      </form>
-    `;
+    const form = document.createElement("form");
+    form.method = "dialog";
+
+    const heading = document.createElement("h2");
+    heading.textContent = "Connect to Navidrome";
+    const description = document.createElement("p");
+    description.textContent =
+      "The access token stays in your userscript manager's private storage.";
+
+    const serverInput = document.createElement("input");
+    serverInput.name = "serverUrl";
+    serverInput.type = "url";
+    serverInput.autocomplete = "url";
+    serverInput.required = true;
+    const serverLabel = document.createElement("label");
+    serverLabel.append(document.createTextNode("Server URL"), serverInput);
+
+    const tokenInput = document.createElement("input");
+    tokenInput.name = "token";
+    tokenInput.type = "password";
+    tokenInput.autocomplete = "off";
+    tokenInput.minLength = 32;
+    tokenInput.required = true;
+    const tokenLabel = document.createElement("label");
+    tokenLabel.append(document.createTextNode("Access token"), tokenInput);
+
+    const status = document.createElement("div");
+    status.className = "navidrome-settings-status";
+    status.setAttribute("role", "status");
+    const actions = document.createElement("div");
+    actions.className = "navidrome-settings-actions";
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.value = "cancel";
+    cancelButton.textContent = "Cancel";
+    const submitButton = document.createElement("button");
+    submitButton.type = "submit";
+    submitButton.textContent = "Test and save";
+    actions.append(cancelButton, submitButton);
+    form.append(heading, description, serverLabel, tokenLabel, status, actions);
+    dialog.append(form);
     document.body.append(dialog);
 
-    const form = dialog.querySelector("form");
-    const serverInput = form.elements.serverUrl;
-    const tokenInput = form.elements.token;
-    const status = dialog.querySelector(".navidrome-settings-status");
-    const cancelButton = dialog.querySelector('button[value="cancel"]');
-    const submitButton = dialog.querySelector('button[type="submit"]');
     serverInput.value = current.serverUrl;
     tokenInput.value = current.token;
 
@@ -944,7 +992,10 @@
     clearInterval(pollTimer);
     pollTimer = null;
     document.getElementById(BUTTON_CONTAINER_ID)?.remove();
-    if (!currentTrack) return;
+    if (!currentTrack) {
+      markRuntime("idle");
+      return;
+    }
 
     ensureButton();
     const states = await getTrackStates();
@@ -957,11 +1008,37 @@
     refreshQueued = true;
     window.requestAnimationFrame(() => {
       refreshQueued = false;
-      void refreshForLocation();
+      void refreshForLocation().catch(reportRuntimeError);
     });
   }
 
+  function markRuntime(phase, error) {
+    let marker = document.getElementById(RUNTIME_MARKER_ID);
+    if (!marker) {
+      marker = document.createElement("meta");
+      marker.id = RUNTIME_MARKER_ID;
+      marker.setAttribute("name", "navidrome-userscript");
+      (document.head || document.documentElement).append(marker);
+    }
+    marker.setAttribute(
+      "content",
+      typeof GM_info === "object" ? GM_info.script.version : "unknown",
+    );
+    marker.dataset.phase = phase;
+    if (error) {
+      marker.dataset.error = error.message || String(error);
+    } else {
+      delete marker.dataset.error;
+    }
+  }
+
+  function reportRuntimeError(error) {
+    markRuntime("error", error);
+    console.error("Add to Navidrome userscript failed:", error);
+  }
+
   function bootstrap() {
+    markRuntime("booting");
     GM_addStyle(STYLES);
     if (window.top === window) {
       GM_registerMenuCommand("Configure Navidrome connection", () => {
@@ -987,6 +1064,7 @@
       childList: true,
       subtree: true,
     });
+    markRuntime("observing");
     scheduleRefresh();
   }
 
@@ -1005,6 +1083,10 @@
     typeof document !== "undefined" &&
     typeof GM_getValue === "function"
   ) {
-    bootstrap();
+    try {
+      bootstrap();
+    } catch (error) {
+      reportRuntimeError(error);
+    }
   }
 })();

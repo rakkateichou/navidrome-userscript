@@ -23,6 +23,7 @@ The token is saved only in the userscript manager's private storage. It is not i
 If the button never appears, first recheck **Allow User Scripts** and that the script itself is enabled. Chrome does not run any Tampermonkey userscripts until that extra permission is granted.
 
 The script requests an isolated DOM sandbox so YouTube's page-level Trusted Types policy cannot block construction of the injected controls.
+It also constructs every injected element through DOM APIs without assigning HTML strings, which keeps the controls compatible if a userscript manager falls back to page context.
 
 ## Security
 
