@@ -1,0 +1,19 @@
+{
+  "name": "navidrome-userscript",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Add tracks from YouTube, YouTube Music, and SoundCloud to a private Navidrome library.",
+  "scripts": {
+    "check": "node --check navidrome.user.js",
+    "format": "prettier --write navidrome.user.js tests README.md package.json",
+    "format:check": "prettier --check navidrome.user.js tests README.md package.json",
+    "publish-feed": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

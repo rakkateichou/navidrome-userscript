@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/publish.ps1"
