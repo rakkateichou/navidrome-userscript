@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.0.0
+// @version      1.1.0
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
 // @supportURL   https://github.com/rakkateichou/navidrome-userscript/issues
-// @updateURL    https://gist.githubusercontent.com/rakkateichou/36726799658f15dcb156c80fdd0d3183/raw/navidrome.user.js
-// @downloadURL  https://gist.githubusercontent.com/rakkateichou/36726799658f15dcb156c80fdd0d3183/raw/navidrome.user.js
+// @updateURL    https://raw.githubusercontent.com/rakkateichou/navidrome-userscript/master/navidrome.user.js
+// @downloadURL  https://raw.githubusercontent.com/rakkateichou/navidrome-userscript/master/navidrome.user.js
 // @match        https://youtu.be/*
 // @match        https://www.youtube.com/*
 // @match        https://m.youtube.com/*

@@ -14,14 +14,14 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.0\.0/);
+  assert.match(source, /@version\s+1\.1\.0/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
   assert.match(source, /@grant\s+GM_xmlhttpRequest/);
   assert.match(
     source,
-    /@updateURL\s+https:\/\/gist\.githubusercontent\.com\/rakkateichou\//,
+    /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/rakkateichou\/navidrome-userscript\/master\/navidrome\.user\.js/,
   );
   assert.doesNotMatch(source, /__UPDATE_URL__/);
 });
@@ -99,4 +99,10 @@ test("userscript no longer depends on Chrome extension messaging", () => {
   assert.doesNotMatch(source, /chrome\.runtime/);
   assert.doesNotMatch(source, /chrome\.storage/);
   assert.match(source, /GM_addValueChangeListener/);
+});
+
+test("public source never contains a Navidrome access token", () => {
+  assert.doesNotMatch(source, /Bearer\s+[A-Za-z0-9_-]{32,}/);
+  assert.match(source, /authorization: `Bearer \$\{config\.token\}`/);
+  assert.match(source, /GM_setValue\(key, value\)/);
 });
