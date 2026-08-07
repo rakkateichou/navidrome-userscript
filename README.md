@@ -22,6 +22,8 @@ The token is saved only in the userscript manager's private storage. It is not i
 
 If the button never appears, first recheck **Allow User Scripts** and that the script itself is enabled. Chrome does not run any Tampermonkey userscripts until that extra permission is granted.
 
+The script requests an isolated DOM sandbox so YouTube's page-level Trusted Types policy cannot block construction of the injected controls.
+
 ## Security
 
 The source code is public, but access to the Navidrome library is not. Every API request requires the private bearer token configured on the server through `BROWSER_EXTENSION_TOKEN`. Requests without the correct token are rejected, and the token is never committed to this repository or embedded in the distributed userscript.

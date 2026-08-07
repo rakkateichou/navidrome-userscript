@@ -14,11 +14,13 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.1\.0/);
+  assert.match(source, /@version\s+1\.2\.0/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
   assert.match(source, /@grant\s+GM_xmlhttpRequest/);
+  assert.match(source, /@sandbox\s+DOM/);
+  assert.match(source, /@inject-into\s+content/);
   assert.match(
     source,
     /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/rakkateichou\/navidrome-userscript\/master\/navidrome\.user\.js/,

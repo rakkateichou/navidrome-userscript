@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.1.0
+// @version      1.2.0
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -16,6 +16,8 @@
 // @match        https://www.soundcloud.com/*
 // @connect      bot.music.rkde.su
 // @run-at       document-idle
+// @sandbox      DOM
+// @inject-into  content
 // @grant        GM_addStyle
 // @grant        GM_addValueChangeListener
 // @grant        GM_getValue
