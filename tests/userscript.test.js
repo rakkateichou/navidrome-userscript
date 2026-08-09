@@ -16,7 +16,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.5\.0/);
+  assert.match(source, /@version\s+1\.6\.0/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -243,7 +243,7 @@ test("YouTube renders its state label in an unclipped native-style portal", () =
   assert.match(source, /function positionYoutubeTooltip\(button, tooltip\)/);
   assert.match(
     source,
-    /button\.addEventListener\("mouseenter", \(\) => showTooltip\(300\)\)/,
+    /button\.addEventListener\("mouseenter", \(\) => showTooltip\(0\)\)/,
   );
   assert.match(source, /document\.body \|\| document\.documentElement/);
   assert.match(source, /button\.removeAttribute\("title"\)/);
