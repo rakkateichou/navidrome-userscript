@@ -24,7 +24,7 @@ The token is saved only in the userscript manager's private storage. It is not i
 
 In Safari's extension settings, give Userscripts access to YouTube, YouTube Music, and SoundCloud (or choose **Always Allow on Every Website**). Open the install URL above, then open the Userscripts toolbar popup to install or refresh the script. Reload the music site afterward.
 
-Userscripts for Safari does not expose the per-script menu used by Tampermonkey. Before a token is saved, this script therefore shows a small settings button in the lower-right corner of supported sites. After setup, press and hold or right-click the site's Navidrome music-note button whenever you need to change the connection.
+Userscripts for Safari does not expose the per-script menu used by Tampermonkey. Before a token is saved, this script therefore shows a **Set up Navidrome** button in the lower-right corner of supported sites, and the site control uses a settings icon. Saving the connection does not add the currently open track. After setup, press and hold or right-click the site's Navidrome music-note button whenever you need to change the connection.
 
 If the button never appears, first recheck **Allow User Scripts** and that the script itself is enabled. Chrome does not run any Tampermonkey userscripts until that extra permission is granted.
 

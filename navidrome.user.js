@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.1
+// @version      1.4.2
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -181,6 +181,19 @@
       display: none;
     }
 
+    .navidrome-add-settings {
+      display: none;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-configured="false"] .navidrome-add-note,
+    #${BUTTON_CONTAINER_ID}[data-configured="false"] .navidrome-add-plus {
+      display: none;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-configured="false"] .navidrome-add-settings {
+      display: initial;
+    }
+
     .navidrome-add-button[data-status="success"] .navidrome-add-note,
     .navidrome-add-button[data-status="success"] .navidrome-add-plus {
       display: none;
@@ -206,21 +219,24 @@
 
     #${SETTINGS_LAUNCHER_ID} {
       align-items: center;
-      appearance: none;
+      appearance: none !important;
       background: #242424;
       border: 1px solid rgb(255 255 255 / 18%);
-      border-radius: 50%;
+      border-radius: 999px;
       bottom: max(18px, env(safe-area-inset-bottom));
       box-shadow: 0 5px 18px rgb(0 0 0 / 35%);
       color: #f1f1f1;
       cursor: pointer;
       display: inline-flex;
+      font: 600 14px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      gap: 8px;
       height: 40px;
       justify-content: center;
-      padding: 0;
+      margin: 0 !important;
+      padding: 0 14px !important;
       position: fixed;
       right: max(18px, env(safe-area-inset-right));
-      width: 40px;
+      width: auto;
       z-index: 2147483646;
     }
 
@@ -235,15 +251,18 @@
     }
 
     #${SETTINGS_DIALOG_ID} {
+      box-sizing: border-box !important;
       background: #181818;
       border: 1px solid rgb(255 255 255 / 16%);
       border-radius: 16px;
       box-shadow: 0 20px 70px rgb(0 0 0 / 55%);
       color: #f1f1f1;
+      color-scheme: dark;
       font: 14px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: auto;
       max-width: min(420px, calc(100vw - 32px));
-      padding: 0;
+      overflow: hidden;
+      padding: 0 !important;
       width: 100%;
       z-index: 2147483647;
     }
@@ -253,15 +272,20 @@
       backdrop-filter: blur(5px);
     }
 
-    #${SETTINGS_DIALOG_ID} form {
-      display: grid;
-      gap: 16px;
-      padding: 22px;
+    #${SETTINGS_DIALOG_ID} > form {
+      box-sizing: border-box !important;
+      display: grid !important;
+      gap: 16px !important;
+      margin: 0 !important;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      padding: 24px !important;
+      width: 100% !important;
     }
 
     #${SETTINGS_DIALOG_ID} h2,
     #${SETTINGS_DIALOG_ID} p {
-      margin: 0;
+      margin: 0 !important;
     }
 
     #${SETTINGS_DIALOG_ID} h2 {
@@ -274,8 +298,9 @@
     }
 
     #${SETTINGS_DIALOG_ID} label {
-      display: grid;
-      gap: 7px;
+      display: grid !important;
+      gap: 7px !important;
+      margin: 0 !important;
     }
 
     #${SETTINGS_DIALOG_ID} input {
@@ -287,7 +312,8 @@
       font: inherit;
       min-width: 0;
       outline: 0;
-      padding: 10px 12px;
+      margin: 0 !important;
+      padding: 10px 12px !important;
       width: 100%;
     }
 
@@ -298,13 +324,17 @@
 
     #${SETTINGS_DIALOG_ID} .navidrome-settings-status {
       color: #ff8b8b;
-      min-height: 20px;
+    }
+
+    #${SETTINGS_DIALOG_ID} .navidrome-settings-status:empty {
+      display: none;
     }
 
     #${SETTINGS_DIALOG_ID} .navidrome-settings-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
+      display: flex !important;
+      gap: 10px !important;
+      justify-content: flex-end !important;
+      margin: 0 !important;
     }
 
     #${SETTINGS_DIALOG_ID} button {
@@ -315,7 +345,8 @@
       color: #fff;
       cursor: pointer;
       font: 600 14px/1 system-ui, sans-serif;
-      padding: 11px 16px;
+      margin: 0 !important;
+      padding: 11px 16px !important;
     }
 
     #${SETTINGS_DIALOG_ID} button[type="submit"] {
@@ -360,6 +391,7 @@
   let currentState = null;
   let pollTimer = null;
   let refreshQueued = false;
+  let hasConfiguredToken = null;
 
   function modernGmApi() {
     if (typeof GM === "object" && GM) return GM;
@@ -605,6 +637,7 @@
         <path class="navidrome-add-note" d="M12 3v11.2a3.7 3.7 0 1 0 2 3.3V8h5V3h-7Z"></path>
         <path class="navidrome-add-plus" d="M5.5 3v2.5H3v2h2.5V10h2V7.5H10v-2H7.5V3h-2Z"></path>
         <path class="navidrome-add-check" d="m9.2 19-5.8-5.8 1.8-1.8 4 4 9.6-9.6 1.8 1.8Z"></path>
+        <path class="navidrome-add-settings" d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.25h-4l-.36 2.68c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.36 2.68h4l.36-2.68c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"></path>
       </svg>
       <span class="navidrome-add-label">Add to Navidrome</span>
     `;
@@ -622,6 +655,10 @@
       ["navidrome-add-note", "M12 3v11.2a3.7 3.7 0 1 0 2 3.3V8h5V3h-7Z"],
       ["navidrome-add-plus", "M5.5 3v2.5H3v2h2.5V10h2V7.5H10v-2H7.5V3h-2Z"],
       ["navidrome-add-check", "m9.2 19-5.8-5.8 1.8-1.8 4 4 9.6-9.6 1.8 1.8Z"],
+      [
+        "navidrome-add-settings",
+        "M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.25h-4l-.36 2.68c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.36 2.68h4l.36-2.68c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z",
+      ],
     ];
     for (const [className, pathData] of paths) {
       const path = document.createElementNS(namespace, "path");
@@ -792,6 +829,7 @@
     }
 
     container.dataset.provider = currentTrack.provider;
+    container.dataset.configured = String(hasConfiguredToken);
     const moreWrapper = youtubeMoreButton?.parentElement;
     const youtubeTarget = moreWrapper?.parentElement;
     const target = insertionTarget(currentTrack.provider);
@@ -835,7 +873,9 @@
     let text = "Add to Navidrome";
     let title = "";
 
-    if (status === "starting") {
+    if (hasConfiguredToken === false && status === "idle") {
+      text = "Configure Navidrome";
+    } else if (status === "starting") {
       text = "Adding…";
     } else if (status === "queued") {
       text = "Queued…";
@@ -878,7 +918,9 @@
       "M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.25h-4l-.36 2.68c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.36 2.68h4l.36-2.68c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z",
     );
     icon.append(path);
-    button.append(icon);
+    const label = document.createElement("span");
+    label.textContent = "Set up Navidrome";
+    button.append(icon, label);
     button.addEventListener("click", () => {
       void openSettings()
         .then(refreshSettingsLauncher)
@@ -890,8 +932,14 @@
   async function refreshSettingsLauncher() {
     if (window.top !== window || !document.body) return;
     const config = await getConfig();
+    hasConfiguredToken = Boolean(config.token);
+    const container = document.getElementById(BUTTON_CONTAINER_ID);
+    if (container) {
+      container.dataset.configured = String(hasConfiguredToken);
+      renderState();
+    }
     const existing = document.getElementById(SETTINGS_LAUNCHER_ID);
-    if (config.token) {
+    if (hasConfiguredToken) {
       existing?.remove();
     } else if (!existing) {
       document.body.append(createSettingsLauncher());
@@ -1027,7 +1075,7 @@
     heading.textContent = "Connect to Navidrome";
     const description = document.createElement("p");
     description.textContent =
-      "The access token stays in your userscript manager's private storage.";
+      "The access token stays in your userscript manager's private storage. Saving it will not add the current track.";
 
     const serverInput = document.createElement("input");
     serverInput.name = "serverUrl";
@@ -1185,19 +1233,17 @@
   async function addCurrentTrack() {
     if (!currentTrack) return;
     const requestedUrl = currentTrack.url;
-    currentState = { status: "starting" };
-    renderState();
 
     try {
-      let config = await getConfig();
+      const config = await getConfig();
       if (!config.token) {
-        config = await openSettings();
-        if (!config) {
-          currentState = null;
-          renderState();
-          return;
-        }
+        await openSettings();
+        currentState = null;
+        renderState();
+        return;
       }
+      currentState = { status: "starting" };
+      renderState();
       const state = await addTrack(requestedUrl);
       if (currentTrack?.url === requestedUrl) {
         currentState = state;

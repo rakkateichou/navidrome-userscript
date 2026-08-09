@@ -15,7 +15,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.1/);
+  assert.match(source, /@version\s+1\.4\.2/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -127,6 +127,7 @@ test("button markup provides idle and success icons", () => {
   assert.match(markup, /navidrome-add-note/);
   assert.match(markup, /navidrome-add-plus/);
   assert.match(markup, /navidrome-add-check/);
+  assert.match(markup, /navidrome-add-settings/);
   assert.match(markup, /navidrome-add-label/);
 });
 
@@ -154,9 +155,24 @@ test("userscript no longer depends on Chrome extension messaging", () => {
 
 test("configuration remains accessible without a userscript menu", () => {
   assert.match(source, /navidrome-userscript-settings-launcher/);
+  assert.match(source, /Set up Navidrome/);
+  assert.match(source, /Saving it will not add the current track/);
   assert.match(source, /attachButtonInteractions/);
   assert.match(source, /pointerdown/);
   assert.match(source, /contextmenu/);
+});
+
+test("first-run setup does not immediately add the open track", () => {
+  assert.match(
+    source,
+    /if \(!config\.token\) \{\s*await openSettings\(\);\s*currentState = null;\s*renderState\(\);\s*return;/,
+  );
+});
+
+test("settings dialog spacing wins over host-page form resets", () => {
+  assert.match(STYLES, /> form \{/);
+  assert.match(STYLES, /padding: 24px !important/);
+  assert.match(STYLES, /navidrome-settings-status:empty/);
 });
 
 test("runtime health is exposed without leaking configuration", () => {
