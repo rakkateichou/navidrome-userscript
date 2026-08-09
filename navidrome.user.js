@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.5
+// @version      1.4.6
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -63,16 +63,16 @@
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] {
-      flex: 0 0 32px !important;
-      height: 32px !important;
-      inline-size: 32px !important;
-      margin: 0 8px !important;
-      max-inline-size: 32px !important;
-      max-width: 32px !important;
-      min-inline-size: 32px !important;
-      min-width: 32px !important;
+      flex: 0 0 40px !important;
+      height: 40px !important;
+      inline-size: 40px !important;
+      margin: 0 !important;
+      max-inline-size: 40px !important;
+      max-width: 40px !important;
+      min-inline-size: 40px !important;
+      min-width: 40px !important;
       vertical-align: middle;
-      width: 32px !important;
+      width: 40px !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="youtube-music"] {
@@ -158,17 +158,17 @@
       color: inherit !important;
       display: inline-flex !important;
       font-size: 0 !important;
-      height: 32px !important;
+      height: 40px !important;
       justify-content: center !important;
       line-height: 0 !important;
       margin: 0 !important;
-      max-height: 32px !important;
-      max-width: 32px !important;
-      min-height: 32px !important;
-      min-width: 32px !important;
+      max-height: 40px !important;
+      max-width: 40px !important;
+      min-height: 40px !important;
+      min-width: 40px !important;
       padding: 0 !important;
       position: relative !important;
-      width: 32px !important;
+      width: 40px !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-icon {
