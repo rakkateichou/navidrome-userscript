@@ -15,7 +15,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.0/);
+  assert.match(source, /@version\s+1\.4\.1/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -52,6 +52,23 @@ test("supports both modern Safari and legacy userscript storage APIs", () => {
     if (savedLegacyGetValue === undefined) delete globalThis.GM_getValue;
     else globalThis.GM_getValue = savedLegacyGetValue;
   }
+});
+
+test("detects the lexical GM object used by Userscripts Safari", () => {
+  const injectedModule = { exports: {} };
+  const injectLikeUserscriptsSafari = Function(
+    "{GM,GM_info}",
+    "module",
+    source,
+  );
+  injectLikeUserscriptsSafari(
+    {
+      GM: { getValue() {} },
+      GM_info: { scriptHandler: "Userscripts" },
+    },
+    injectedModule,
+  );
+  assert.equal(injectedModule.exports.hasUserscriptStorageApi(), true);
 });
 
 test("SoundCloud track URLs normalize the modern iframe route", () => {

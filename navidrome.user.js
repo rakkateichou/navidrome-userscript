@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.0
+// @version      1.4.1
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -361,12 +361,51 @@
   let pollTimer = null;
   let refreshQueued = false;
 
+  function modernGmApi() {
+    if (typeof GM === "object" && GM) return GM;
+    return globalThis.GM || null;
+  }
+
   function modernGmMethod(name) {
-    const method = globalThis.GM?.[name];
-    return typeof method === "function" ? method.bind(globalThis.GM) : null;
+    const api = modernGmApi();
+    const method = api?.[name];
+    return typeof method === "function" ? method.bind(api) : null;
   }
 
   function legacyGmMethod(name) {
+    let lexicalMethod = null;
+    switch (name) {
+      case "GM_addStyle":
+        lexicalMethod = typeof GM_addStyle === "function" ? GM_addStyle : null;
+        break;
+      case "GM_addValueChangeListener":
+        lexicalMethod =
+          typeof GM_addValueChangeListener === "function"
+            ? GM_addValueChangeListener
+            : null;
+        break;
+      case "GM_getValue":
+        lexicalMethod = typeof GM_getValue === "function" ? GM_getValue : null;
+        break;
+      case "GM_notification":
+        lexicalMethod =
+          typeof GM_notification === "function" ? GM_notification : null;
+        break;
+      case "GM_registerMenuCommand":
+        lexicalMethod =
+          typeof GM_registerMenuCommand === "function"
+            ? GM_registerMenuCommand
+            : null;
+        break;
+      case "GM_setValue":
+        lexicalMethod = typeof GM_setValue === "function" ? GM_setValue : null;
+        break;
+      case "GM_xmlhttpRequest":
+        lexicalMethod =
+          typeof GM_xmlhttpRequest === "function" ? GM_xmlhttpRequest : null;
+        break;
+    }
+    if (lexicalMethod) return lexicalMethod;
     const method = globalThis[name];
     return typeof method === "function" ? method : null;
   }
@@ -376,7 +415,10 @@
   }
 
   function userscriptInfo() {
-    return globalThis.GM?.info || globalThis.GM_info || null;
+    const api = modernGmApi();
+    if (api?.info) return api.info;
+    if (typeof GM_info === "object" && GM_info) return GM_info;
+    return globalThis.GM_info || null;
   }
 
   async function addUserscriptStyle(css) {
