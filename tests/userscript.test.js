@@ -16,7 +16,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.10/);
+  assert.match(source, /@version\s+1\.5\.0/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
