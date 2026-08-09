@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.6
+// @version      1.4.7
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -173,12 +173,12 @@
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-icon {
       display: block !important;
-      height: 16px !important;
-      max-height: 16px !important;
-      max-width: 16px !important;
-      min-height: 16px !important;
-      min-width: 16px !important;
-      width: 16px !important;
+      height: 24px !important;
+      max-height: 24px !important;
+      max-width: 24px !important;
+      min-height: 24px !important;
+      min-width: 24px !important;
+      width: 24px !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-button:hover:not(:disabled) {

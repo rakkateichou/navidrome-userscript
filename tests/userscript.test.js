@@ -16,7 +16,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.6/);
+  assert.match(source, /@version\s+1\.4\.7/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -190,6 +190,10 @@ test("SoundCloud track control resists host button and icon overrides", () => {
   assert.match(
     STYLES,
     /data-provider="soundcloud"[^}]*navidrome-add-button[^}]*height: 40px !important[^}]*padding: 0 !important/s,
+  );
+  assert.match(
+    STYLES,
+    /data-provider="soundcloud"[^}]*navidrome-add-icon[^}]*height: 24px !important[^}]*width: 24px !important/s,
   );
   assert.match(
     STYLES,
