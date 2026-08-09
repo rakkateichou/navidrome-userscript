@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.6.2
+// @version      1.6.3
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -782,7 +782,7 @@
       Math.min(window.innerWidth - halfWidth - 8, center),
     );
     tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${rect.bottom + 20}px`;
+    tooltip.style.top = `${rect.bottom + 12}px`;
   }
 
   function attachYoutubeTooltip(button, tooltip) {
