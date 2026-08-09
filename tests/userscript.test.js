@@ -16,7 +16,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.7/);
+  assert.match(source, /@version\s+1\.4\.8/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -207,6 +207,24 @@ test("YouTube control reserves its own left gutter", () => {
     STYLES,
     /data-provider="youtube"[^}]*box-sizing: content-box !important[^}]*padding: 0 0 0 8px !important/s,
   );
+});
+
+test("SoundCloud and YouTube controls provide state-aware hover labels", () => {
+  assert.match(source, /function createButtonTooltip\(\)/);
+  assert.match(source, /tooltip\.textContent = text/);
+  assert.match(
+    STYLES,
+    /data-provider="soundcloud"[^}]*navidrome-add-tooltip[^}]*background: #181818/s,
+  );
+  assert.match(
+    STYLES,
+    /data-provider="youtube"[^}]*navidrome-add-tooltip[^}]*font: 400 12px\/16px Roboto/s,
+  );
+  assert.match(
+    STYLES,
+    /data-provider="youtube"[^}]*:hover \.navidrome-add-tooltip[^}]*visibility: visible/s,
+  );
+  assert.match(source, /button\.removeAttribute\("title"\)/);
 });
 
 test("userscript no longer depends on Chrome extension messaging", () => {

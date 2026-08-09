@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.7
+// @version      1.4.8
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -84,7 +84,9 @@
       box-sizing: content-box !important;
       height: 44px !important;
       margin: 0 !important;
+      overflow: visible !important;
       padding: 0 0 0 8px !important;
+      position: relative !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud-player"] {
@@ -184,6 +186,70 @@
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-button:hover:not(:disabled) {
       background: rgb(255 255 255 / 10%);
       border-color: rgb(255 255 255 / 55%);
+    }
+
+    .navidrome-add-tooltip {
+      display: none;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"],
+    #${BUTTON_CONTAINER_ID}[data-provider="youtube"] {
+      overflow: visible !important;
+      position: relative !important;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-tooltip,
+    #${BUTTON_CONTAINER_ID}[data-provider="youtube"] .navidrome-add-tooltip {
+      bottom: calc(100% + 8px);
+      box-sizing: border-box !important;
+      display: block !important;
+      left: 50%;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute !important;
+      transform: translate(-50%, 4px);
+      transition:
+        opacity 120ms ease,
+        transform 120ms ease,
+        visibility 0s linear 120ms;
+      visibility: hidden;
+      white-space: nowrap;
+      z-index: 2147483647;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"]:hover .navidrome-add-tooltip,
+    #${BUTTON_CONTAINER_ID}[data-provider="youtube"]:hover .navidrome-add-tooltip {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      transition-delay: 350ms;
+      visibility: visible;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"]:focus-within .navidrome-add-tooltip,
+    #${BUTTON_CONTAINER_ID}[data-provider="youtube"]:focus-within .navidrome-add-tooltip {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      transition-delay: 0ms;
+      visibility: visible;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-tooltip {
+      background: #181818;
+      border: 1px solid rgb(255 255 255 / 22%);
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
+      color: #fff;
+      font: 400 14px/20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 6px 10px;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="youtube"] .navidrome-add-tooltip {
+      background: rgb(97 97 97 / 92%);
+      border-radius: 4px;
+      color: #fff;
+      font: 400 12px/16px Roboto, Arial, sans-serif;
+      left: calc(50% + 4px);
+      padding: 8px;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud-player"] .navidrome-add-native-soundcloud-player {
@@ -710,6 +776,15 @@
     return fragment;
   }
 
+  function createButtonTooltip() {
+    const tooltip = document.createElement("span");
+    tooltip.className = "navidrome-add-tooltip";
+    tooltip.setAttribute("aria-hidden", "true");
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.textContent = "Add to Navidrome";
+    return tooltip;
+  }
+
   function visibleYoutubeMoreButton() {
     return Array.from(
       document.querySelectorAll(
@@ -861,6 +936,7 @@
           youtubeMoreButton,
           soundcloudReferenceButton,
         ),
+        createButtonTooltip(),
       );
     }
 
@@ -897,6 +973,9 @@
     if (!button) return;
 
     const label = button.querySelector(".navidrome-add-label");
+    const tooltip = document.querySelector(
+      `#${BUTTON_CONTAINER_ID} > .navidrome-add-tooltip`,
+    );
     const status = currentState?.status || "idle";
     button.dataset.status = status;
     button.classList.toggle(
@@ -927,7 +1006,12 @@
     if (label && label.textContent !== text) {
       label.textContent = text;
     }
-    if (button.title !== title) {
+    if (tooltip && tooltip.textContent !== text) {
+      tooltip.textContent = text;
+    }
+    if (["soundcloud", "youtube"].includes(currentTrack.provider)) {
+      button.removeAttribute("title");
+    } else if (button.title !== title) {
       button.title = title;
     }
     const accessibleLabel = status === "error" ? `${text}. ${title}` : text;
