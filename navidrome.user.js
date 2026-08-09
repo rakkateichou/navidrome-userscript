@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.3.0
+// @version      1.4.0
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -18,6 +18,10 @@
 // @run-at       document-idle
 // @sandbox      DOM
 // @inject-into  content
+// @grant        GM.addStyle
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @grant        GM.xmlHttpRequest
 // @grant        GM_addStyle
 // @grant        GM_addValueChangeListener
 // @grant        GM_getValue
@@ -35,6 +39,7 @@
   const DEFAULT_SERVER_URL = "https://bot.music.rkde.su";
   const BUTTON_CONTAINER_ID = "navidrome-userscript-add-container";
   const SETTINGS_DIALOG_ID = "navidrome-userscript-settings";
+  const SETTINGS_LAUNCHER_ID = "navidrome-userscript-settings-launcher";
   const RUNTIME_MARKER_ID = "navidrome-userscript-runtime";
   const CONFIG_KEY = "navidromeConfig";
   const TRACK_STATES_KEY = "navidromeTrackStates";
@@ -199,6 +204,36 @@
       width: 1px;
     }
 
+    #${SETTINGS_LAUNCHER_ID} {
+      align-items: center;
+      appearance: none;
+      background: #242424;
+      border: 1px solid rgb(255 255 255 / 18%);
+      border-radius: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      box-shadow: 0 5px 18px rgb(0 0 0 / 35%);
+      color: #f1f1f1;
+      cursor: pointer;
+      display: inline-flex;
+      height: 40px;
+      justify-content: center;
+      padding: 0;
+      position: fixed;
+      right: max(18px, env(safe-area-inset-right));
+      width: 40px;
+      z-index: 2147483646;
+    }
+
+    #${SETTINGS_LAUNCHER_ID}:active {
+      background: #333;
+    }
+
+    #${SETTINGS_LAUNCHER_ID} svg {
+      fill: currentcolor;
+      height: 20px;
+      width: 20px;
+    }
+
     #${SETTINGS_DIALOG_ID} {
       background: #181818;
       border: 1px solid rgb(255 255 255 / 16%);
@@ -325,6 +360,79 @@
   let currentState = null;
   let pollTimer = null;
   let refreshQueued = false;
+
+  function modernGmMethod(name) {
+    const method = globalThis.GM?.[name];
+    return typeof method === "function" ? method.bind(globalThis.GM) : null;
+  }
+
+  function legacyGmMethod(name) {
+    const method = globalThis[name];
+    return typeof method === "function" ? method : null;
+  }
+
+  function hasUserscriptStorageApi() {
+    return Boolean(modernGmMethod("getValue") || legacyGmMethod("GM_getValue"));
+  }
+
+  function userscriptInfo() {
+    return globalThis.GM?.info || globalThis.GM_info || null;
+  }
+
+  async function addUserscriptStyle(css) {
+    const addStyle =
+      modernGmMethod("addStyle") || legacyGmMethod("GM_addStyle");
+    if (!addStyle) {
+      const style = document.createElement("style");
+      style.textContent = css;
+      (document.head || document.documentElement).append(style);
+      return;
+    }
+    await Promise.resolve(addStyle(css));
+  }
+
+  function userscriptRequest(details) {
+    const modernRequest = modernGmMethod("xmlHttpRequest");
+    if (modernRequest) {
+      return { kind: "modern", request: modernRequest(details) };
+    }
+    const legacyRequest = legacyGmMethod("GM_xmlhttpRequest");
+    if (legacyRequest) {
+      return { kind: "legacy", request: legacyRequest(details) };
+    }
+    throw new UserscriptError(
+      "This userscript manager does not provide cross-origin requests.",
+      "UNSUPPORTED_MANAGER",
+    );
+  }
+
+  function registerSettingsMenu() {
+    const register =
+      modernGmMethod("registerMenuCommand") ||
+      legacyGmMethod("GM_registerMenuCommand");
+    if (register) {
+      register("Configure Navidrome connection", () => {
+        void openSettings();
+      });
+    }
+  }
+
+  function listenForStoredStateChanges(listener) {
+    const addListener =
+      modernGmMethod("addValueChangeListener") ||
+      legacyGmMethod("GM_addValueChangeListener");
+    if (addListener) addListener(TRACK_STATES_KEY, listener);
+  }
+
+  function notifyConnected() {
+    const notify =
+      modernGmMethod("notification") || legacyGmMethod("GM_notification");
+    if (notify) {
+      void Promise.resolve(
+        notify("Connected successfully.", "Add to Navidrome"),
+      ).catch(() => {});
+    }
+  }
 
   function cleanServerUrl(value) {
     const url = new URL(value || DEFAULT_SERVER_URL);
@@ -501,6 +609,47 @@
     );
   }
 
+  function attachButtonInteractions(button) {
+    let holdTimer = null;
+    let suppressNextClick = false;
+
+    function clearHoldTimer() {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+
+    function openSettingsFromButton() {
+      suppressNextClick = true;
+      void openSettings()
+        .then(refreshSettingsLauncher)
+        .catch(reportRuntimeError);
+    }
+
+    button.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse") return;
+      clearHoldTimer();
+      holdTimer = setTimeout(openSettingsFromButton, 650);
+    });
+    button.addEventListener("pointerup", clearHoldTimer);
+    button.addEventListener("pointercancel", clearHoldTimer);
+    button.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      openSettingsFromButton();
+      setTimeout(() => {
+        suppressNextClick = false;
+      }, 900);
+    });
+    button.addEventListener("click", (event) => {
+      if (suppressNextClick) {
+        event.preventDefault();
+        event.stopPropagation();
+        suppressNextClick = false;
+        return;
+      }
+      void addCurrentTrack();
+    });
+  }
+
   function createNavidromeButton(
     provider,
     youtubeMoreButton,
@@ -547,7 +696,7 @@
       button.append(createButtonContent());
     }
     button.type = "button";
-    button.addEventListener("click", addCurrentTrack);
+    attachButtonInteractions(button);
     return button;
   }
 
@@ -670,12 +819,65 @@
     managePolling();
   }
 
+  function createSettingsLauncher() {
+    const namespace = "http://www.w3.org/2000/svg";
+    const button = document.createElement("button");
+    button.id = SETTINGS_LAUNCHER_ID;
+    button.type = "button";
+    button.title = "Configure Navidrome connection";
+    button.setAttribute("aria-label", "Configure Navidrome connection");
+
+    const icon = document.createElementNS(namespace, "svg");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS(namespace, "path");
+    path.setAttribute(
+      "d",
+      "M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.25h-4l-.36 2.68c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.36 2.68h4l.36-2.68c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.11-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z",
+    );
+    icon.append(path);
+    button.append(icon);
+    button.addEventListener("click", () => {
+      void openSettings()
+        .then(refreshSettingsLauncher)
+        .catch(reportRuntimeError);
+    });
+    return button;
+  }
+
+  async function refreshSettingsLauncher() {
+    if (window.top !== window || !document.body) return;
+    const config = await getConfig();
+    const existing = document.getElementById(SETTINGS_LAUNCHER_ID);
+    if (config.token) {
+      existing?.remove();
+    } else if (!existing) {
+      document.body.append(createSettingsLauncher());
+    }
+  }
+
   async function gmGetValue(key, fallback) {
-    return Promise.resolve(GM_getValue(key, fallback));
+    const getValue =
+      modernGmMethod("getValue") || legacyGmMethod("GM_getValue");
+    if (!getValue) {
+      throw new UserscriptError(
+        "This userscript manager does not provide private storage.",
+        "UNSUPPORTED_MANAGER",
+      );
+    }
+    return Promise.resolve(getValue(key, fallback));
   }
 
   async function gmSetValue(key, value) {
-    return Promise.resolve(GM_setValue(key, value));
+    const setValue =
+      modernGmMethod("setValue") || legacyGmMethod("GM_setValue");
+    if (!setValue) {
+      throw new UserscriptError(
+        "This userscript manager does not provide private storage.",
+        "UNSUPPORTED_MANAGER",
+      );
+    }
+    return Promise.resolve(setValue(key, value));
   }
 
   async function getConfig() {
@@ -688,54 +890,61 @@
 
   function requestWithConfig(path, options, config) {
     return new Promise((resolve, reject) => {
-      GM_xmlhttpRequest({
-        method: options.method || "GET",
-        url: new URL(path, config.serverUrl).toString(),
-        data: options.body,
-        headers: {
-          authorization: `Bearer ${config.token}`,
-          ...(options.body ? { "content-type": "application/json" } : {}),
-          ...(options.headers || {}),
-        },
-        timeout: 30000,
-        onload(response) {
-          let payload = null;
-          try {
-            payload = JSON.parse(response.responseText);
-          } catch {
-            // The HTTP status message is more useful than a parse error.
-          }
-          if (response.status < 200 || response.status >= 300) {
-            const detail = payload?.detail;
+      try {
+        const started = userscriptRequest({
+          method: options.method || "GET",
+          url: new URL(path, config.serverUrl).toString(),
+          data: options.body,
+          headers: {
+            authorization: `Bearer ${config.token}`,
+            ...(options.body ? { "content-type": "application/json" } : {}),
+            ...(options.headers || {}),
+          },
+          timeout: 30000,
+          onload(response) {
+            let payload = null;
+            try {
+              payload = JSON.parse(response.responseText);
+            } catch {
+              // The HTTP status message is more useful than a parse error.
+            }
+            if (response.status < 200 || response.status >= 300) {
+              const detail = payload?.detail;
+              reject(
+                new UserscriptError(
+                  typeof detail === "string"
+                    ? detail
+                    : `Navidrome server returned ${response.status || "an error"}.`,
+                  response.status === 401 ? "AUTH_FAILED" : "REQUEST_FAILED",
+                ),
+              );
+              return;
+            }
+            resolve(payload);
+          },
+          onerror() {
             reject(
               new UserscriptError(
-                typeof detail === "string"
-                  ? detail
-                  : `Navidrome server returned ${response.status || "an error"}.`,
-                response.status === 401 ? "AUTH_FAILED" : "REQUEST_FAILED",
+                "Could not reach the Navidrome server.",
+                "NETWORK_ERROR",
               ),
             );
-            return;
-          }
-          resolve(payload);
-        },
-        onerror() {
-          reject(
-            new UserscriptError(
-              "Could not reach the Navidrome server.",
-              "NETWORK_ERROR",
-            ),
-          );
-        },
-        ontimeout() {
-          reject(
-            new UserscriptError(
-              "The Navidrome server took too long to respond.",
-              "NETWORK_ERROR",
-            ),
-          );
-        },
-      });
+          },
+          ontimeout() {
+            reject(
+              new UserscriptError(
+                "The Navidrome server took too long to respond.",
+                "NETWORK_ERROR",
+              ),
+            );
+          },
+        });
+        if (started.kind === "modern" && started.request?.catch) {
+          started.request.catch(() => {});
+        }
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -750,10 +959,19 @@
     return requestWithConfig(path, options, config);
   }
 
+  function showSettingsDialog(dialog) {
+    if (dialog.open) return;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+  }
+
   async function openSettings() {
     const existing = document.getElementById(SETTINGS_DIALOG_ID);
     if (existing) {
-      existing.showModal();
+      showSettingsDialog(existing);
       return null;
     }
 
@@ -808,7 +1026,11 @@
 
     return new Promise((resolve) => {
       function close(result) {
-        dialog.close();
+        if (typeof dialog.close === "function") {
+          dialog.close();
+        } else {
+          dialog.removeAttribute("open");
+        }
         dialog.remove();
         resolve(result);
       }
@@ -833,9 +1055,8 @@
           }
           await requestWithConfig("/api/extension/status", {}, config);
           await gmSetValue(CONFIG_KEY, config);
-          if (typeof GM_notification === "function") {
-            GM_notification("Connected successfully.", "Add to Navidrome");
-          }
+          notifyConnected();
+          await refreshSettingsLauncher();
           close(config);
         } catch (error) {
           status.textContent = error.message || "Could not connect.";
@@ -843,7 +1064,7 @@
           submitButton.textContent = "Test and save";
         }
       });
-      dialog.showModal();
+      showSettingsDialog(dialog);
       tokenInput.focus();
     });
   }
@@ -946,6 +1167,7 @@
           ...(await getConfig()),
           token: "",
         });
+        await refreshSettingsLauncher();
       }
       if (currentTrack?.url === requestedUrl) {
         currentState = { status: "error", error: error.message };
@@ -1022,7 +1244,7 @@
     }
     marker.setAttribute(
       "content",
-      typeof GM_info === "object" ? GM_info.script.version : "unknown",
+      userscriptInfo()?.script?.version || "unknown",
     );
     marker.dataset.phase = phase;
     if (error) {
@@ -1039,20 +1261,17 @@
 
   function bootstrap() {
     markRuntime("booting");
-    GM_addStyle(STYLES);
+    void addUserscriptStyle(STYLES).catch(reportRuntimeError);
     if (window.top === window) {
-      GM_registerMenuCommand("Configure Navidrome connection", () => {
-        void openSettings();
-      });
+      registerSettingsMenu();
+      void refreshSettingsLauncher().catch(reportRuntimeError);
     }
-    if (typeof GM_addValueChangeListener === "function") {
-      GM_addValueChangeListener(TRACK_STATES_KEY, (_key, _oldValue, states) => {
-        if (currentTrack && states?.[currentTrack.url]) {
-          currentState = states[currentTrack.url];
-          renderState();
-        }
-      });
-    }
+    listenForStoredStateChanges((_key, _oldValue, states) => {
+      if (currentTrack && states?.[currentTrack.url]) {
+        currentState = states[currentTrack.url];
+        renderState();
+      }
+    });
 
     document.addEventListener("yt-navigate-finish", scheduleRefresh);
     window.addEventListener("popstate", scheduleRefresh);
@@ -1073,6 +1292,7 @@
       STYLES,
       buttonMarkup,
       cleanServerUrl,
+      hasUserscriptStorageApi,
       soundcloudTrackUrl,
       stateFromJob,
     };
@@ -1081,7 +1301,7 @@
   if (
     typeof window !== "undefined" &&
     typeof document !== "undefined" &&
-    typeof GM_getValue === "function"
+    hasUserscriptStorageApi()
   ) {
     try {
       bootstrap();

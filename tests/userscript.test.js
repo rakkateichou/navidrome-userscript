@@ -9,15 +9,19 @@ const {
   STYLES,
   buttonMarkup,
   cleanServerUrl,
+  hasUserscriptStorageApi,
   soundcloudTrackUrl,
   stateFromJob,
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.3\.0/);
+  assert.match(source, /@version\s+1\.4\.0/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
+  assert.match(source, /@grant\s+GM\.getValue/);
+  assert.match(source, /@grant\s+GM\.setValue/);
+  assert.match(source, /@grant\s+GM\.xmlHttpRequest/);
   assert.match(source, /@grant\s+GM_xmlhttpRequest/);
   assert.match(source, /@sandbox\s+DOM/);
   assert.match(source, /@inject-into\s+content/);
@@ -26,6 +30,28 @@ test("userscript metadata supports all three sites and automatic updates", () =>
     /@updateURL\s+https:\/\/raw\.githubusercontent\.com\/rakkateichou\/navidrome-userscript\/master\/navidrome\.user\.js/,
   );
   assert.doesNotMatch(source, /__UPDATE_URL__/);
+});
+
+test("supports both modern Safari and legacy userscript storage APIs", () => {
+  const savedModernApi = globalThis.GM;
+  const savedLegacyGetValue = globalThis.GM_getValue;
+  try {
+    delete globalThis.GM_getValue;
+    globalThis.GM = { getValue() {} };
+    assert.equal(hasUserscriptStorageApi(), true);
+
+    delete globalThis.GM;
+    globalThis.GM_getValue = () => {};
+    assert.equal(hasUserscriptStorageApi(), true);
+
+    delete globalThis.GM_getValue;
+    assert.equal(hasUserscriptStorageApi(), false);
+  } finally {
+    if (savedModernApi === undefined) delete globalThis.GM;
+    else globalThis.GM = savedModernApi;
+    if (savedLegacyGetValue === undefined) delete globalThis.GM_getValue;
+    else globalThis.GM_getValue = savedLegacyGetValue;
+  }
 });
 
 test("SoundCloud track URLs normalize the modern iframe route", () => {
@@ -109,6 +135,13 @@ test("userscript no longer depends on Chrome extension messaging", () => {
   assert.match(source, /GM_addValueChangeListener/);
 });
 
+test("configuration remains accessible without a userscript menu", () => {
+  assert.match(source, /navidrome-userscript-settings-launcher/);
+  assert.match(source, /attachButtonInteractions/);
+  assert.match(source, /pointerdown/);
+  assert.match(source, /contextmenu/);
+});
+
 test("runtime health is exposed without leaking configuration", () => {
   assert.match(source, /navidrome-userscript-runtime/);
   assert.match(source, /markRuntime\("ready"\)/);
@@ -118,5 +151,5 @@ test("runtime health is exposed without leaking configuration", () => {
 test("public source never contains a Navidrome access token", () => {
   assert.doesNotMatch(source, /Bearer\s+[A-Za-z0-9_-]{32,}/);
   assert.match(source, /authorization: `Bearer \$\{config\.token\}`/);
-  assert.match(source, /GM_setValue\(key, value\)/);
+  assert.match(source, /gmSetValue\(CONFIG_KEY, config\)/);
 });
