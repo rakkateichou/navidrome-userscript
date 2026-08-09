@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.6.4
+// @version      1.6.5
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -483,6 +483,7 @@
   let pollTimer = null;
   let refreshQueued = false;
   let hasConfiguredToken = null;
+  let cachedConfig = null;
 
   function modernGmApi() {
     if (typeof GM === "object" && GM) return GM;
@@ -1193,10 +1194,13 @@
 
   async function getConfig() {
     const stored = (await gmGetValue(CONFIG_KEY, {})) || {};
-    return {
+    const config = {
       serverUrl: cleanServerUrl(stored.serverUrl || DEFAULT_SERVER_URL),
       token: String(stored.token || "").trim(),
     };
+    cachedConfig = config;
+    hasConfiguredToken = Boolean(config.token);
+    return config;
   }
 
   function requestWithConfig(path, options, config) {
@@ -1418,19 +1422,15 @@
     };
   }
 
-  async function addTrack(url) {
-    const states = await getTrackStates();
-    const existing = states[url];
-    if (
-      existing &&
-      ["queued", "running", "success"].includes(existing.status)
-    ) {
-      return existing;
-    }
-    const payload = await requestApi("/api/extension/sync", {
-      method: "POST",
-      body: JSON.stringify({ url }),
-    });
+  async function addTrack(url, config) {
+    const payload = await requestWithConfig(
+      "/api/extension/sync",
+      {
+        method: "POST",
+        body: JSON.stringify({ url }),
+      },
+      config,
+    );
     return saveTrackState(url, stateFromJob(url, payload.job));
   }
 
@@ -1456,7 +1456,10 @@
     const requestedUrl = currentTrack.url;
 
     try {
-      const config = await getConfig();
+      let config = cachedConfig;
+      if (!config) {
+        config = await getConfig();
+      }
       if (!config.token) {
         await openSettings();
         currentState = null;
@@ -1465,7 +1468,10 @@
       }
       currentState = { status: "starting" };
       renderState();
-      const state = await addTrack(requestedUrl);
+      // addTrack starts the privileged request synchronously before this
+      // function yields, so the userscript manager owns it before the user
+      // can navigate away or close the tab.
+      const state = await addTrack(requestedUrl, config);
       if (currentTrack?.url === requestedUrl) {
         currentState = state;
         renderState();
@@ -1569,9 +1575,12 @@
     console.error("Add to Navidrome userscript failed:", error);
   }
 
-  function bootstrap() {
+  async function bootstrap() {
     markRuntime("booting");
     ensureDocumentStyle(STYLES);
+    // Do not expose an actionable button until credentials are in memory.
+    // This keeps the click path free of storage round trips.
+    await getConfig();
     if (window.top === window) {
       registerSettingsMenu();
       void refreshSettingsLauncher().catch(reportRuntimeError);
@@ -1614,10 +1623,6 @@
     typeof document !== "undefined" &&
     hasUserscriptStorageApi()
   ) {
-    try {
-      bootstrap();
-    } catch (error) {
-      reportRuntimeError(error);
-    }
+    void bootstrap().catch(reportRuntimeError);
   }
 })();

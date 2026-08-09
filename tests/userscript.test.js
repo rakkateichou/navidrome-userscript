@@ -16,7 +16,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.6\.4/);
+  assert.match(source, /@version\s+1\.6\.5/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -278,6 +278,23 @@ test("first-run setup does not immediately add the open track", () => {
   assert.match(
     source,
     /if \(!config\.token\) \{\s*await openSettings\(\);\s*currentState = null;\s*renderState\(\);\s*return;/,
+  );
+});
+
+test("configured clicks dispatch before any storage round trip", () => {
+  assert.match(source, /let cachedConfig = null/);
+  assert.match(
+    source,
+    /let config = cachedConfig;\s*if \(!config\) \{\s*config = await getConfig\(\);/,
+  );
+  assert.match(source, /await addTrack\(requestedUrl, config\)/);
+  assert.match(
+    source,
+    /async function addTrack\(url, config\) \{\s*const payload = await requestWithConfig/,
+  );
+  assert.match(
+    source,
+    /async function bootstrap\(\)[\s\S]*?await getConfig\(\);[\s\S]*?scheduleRefresh\(\);/,
   );
 });
 

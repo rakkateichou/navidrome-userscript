@@ -20,6 +20,8 @@ The button adopts each site's native controls. On SoundCloud's bottom player it 
 
 The token is saved only in the userscript manager's private storage. It is not included in this repository or in the update file. Settings can be reopened from the userscript manager menu as **Configure Navidrome connection**. If the manager has no script menu, press and hold the music-note button on touch devices or right-click it on desktop.
 
+Once configured, a click dispatches the queue request to the userscript manager immediately. You can navigate away or close the tab as soon as the button reacts; downloading and importing continue on the Navidrome server.
+
 ### Safari setup
 
 In Safari's extension settings, give Userscripts access to YouTube, YouTube Music, and SoundCloud (or choose **Always Allow on Every Website**). Open the install URL above, then open the Userscripts toolbar popup to install or refresh the script. Reload the music site afterward.
