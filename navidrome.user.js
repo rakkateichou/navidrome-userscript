@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.3
+// @version      1.4.4
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -64,8 +64,16 @@
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] {
-      margin: 0;
+      flex: 0 0 32px !important;
+      height: 32px !important;
+      inline-size: 32px !important;
+      margin: 0 8px !important;
+      max-inline-size: 32px !important;
+      max-width: 32px !important;
+      min-inline-size: 32px !important;
+      min-width: 32px !important;
       vertical-align: middle;
+      width: 32px !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="youtube-music"] {
@@ -142,9 +150,36 @@
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-button {
-      background: transparent;
-      border: 1px solid rgb(255 255 255 / 38%);
-      color: inherit;
+      align-items: center !important;
+      appearance: none !important;
+      background: transparent !important;
+      border: 1px solid rgb(255 255 255 / 38%) !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+      color: inherit !important;
+      display: inline-flex !important;
+      font-size: 0 !important;
+      height: 32px !important;
+      justify-content: center !important;
+      line-height: 0 !important;
+      margin: 0 !important;
+      max-height: 32px !important;
+      max-width: 32px !important;
+      min-height: 32px !important;
+      min-width: 32px !important;
+      padding: 0 !important;
+      position: relative !important;
+      width: 32px !important;
+    }
+
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-icon {
+      display: block !important;
+      height: 16px !important;
+      max-height: 16px !important;
+      max-width: 16px !important;
+      min-height: 16px !important;
+      min-width: 16px !important;
+      width: 16px !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-button:hover:not(:disabled) {
@@ -180,29 +215,29 @@
     }
 
     .navidrome-add-check {
-      display: none;
+      display: none !important;
     }
 
     .navidrome-add-settings {
-      display: none;
+      display: none !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-configured="false"] .navidrome-add-note,
     #${BUTTON_CONTAINER_ID}[data-configured="false"] .navidrome-add-plus {
-      display: none;
+      display: none !important;
     }
 
     #${BUTTON_CONTAINER_ID}[data-configured="false"] .navidrome-add-settings {
-      display: initial;
+      display: block !important;
     }
 
     .navidrome-add-button[data-status="success"] .navidrome-add-note,
     .navidrome-add-button[data-status="success"] .navidrome-add-plus {
-      display: none;
+      display: none !important;
     }
 
     .navidrome-add-button[data-status="success"] .navidrome-add-check {
-      display: block;
+      display: block !important;
     }
 
     .navidrome-add-loading .navidrome-add-icon {
@@ -210,13 +245,15 @@
     }
 
     .navidrome-add-label {
-      clip: rect(0 0 0 0);
-      clip-path: inset(50%);
-      height: 1px;
-      overflow: hidden;
-      position: absolute;
-      white-space: nowrap;
-      width: 1px;
+      clip: rect(0 0 0 0) !important;
+      clip-path: inset(50%) !important;
+      height: 1px !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      position: absolute !important;
+      white-space: nowrap !important;
+      width: 1px !important;
     }
 
     #${SETTINGS_LAUNCHER_ID} {

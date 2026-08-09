@@ -15,7 +15,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.3/);
+  assert.match(source, /@version\s+1\.4\.4/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -145,6 +145,22 @@ test("SoundCloud player delegates its surface and hover behavior to native class
     STYLES,
     /soundcloud-player[^}]*\.navidrome-add-button:hover[^}]*background/s,
   );
+});
+
+test("SoundCloud track control resists host button and icon overrides", () => {
+  assert.match(
+    STYLES,
+    /data-provider="soundcloud"[^}]*flex: 0 0 32px !important[^}]*width: 32px !important/s,
+  );
+  assert.match(
+    STYLES,
+    /data-provider="soundcloud"[^}]*navidrome-add-button[^}]*height: 32px !important[^}]*padding: 0 !important/s,
+  );
+  assert.match(
+    STYLES,
+    /navidrome-add-label[^}]*position: absolute !important/s,
+  );
+  assert.match(STYLES, /navidrome-add-settings[^}]*display: none !important/s);
 });
 
 test("YouTube control reserves its own left gutter", () => {
