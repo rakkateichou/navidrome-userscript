@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.9
+// @version      1.4.10
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -811,7 +811,7 @@
       }, delay);
     }
 
-    button.addEventListener("mouseenter", () => showTooltip(500));
+    button.addEventListener("mouseenter", () => showTooltip(300));
     button.addEventListener("mouseleave", hideTooltip);
     button.addEventListener("focus", () => showTooltip(0));
     button.addEventListener("blur", hideTooltip);
