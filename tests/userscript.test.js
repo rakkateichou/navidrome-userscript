@@ -16,7 +16,7 @@ const {
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.8/);
+  assert.match(source, /@version\s+1\.4\.9/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -182,14 +182,25 @@ test("SoundCloud player delegates its surface and hover behavior to native class
   );
 });
 
-test("SoundCloud track control resists host button and icon overrides", () => {
+test("SoundCloud track control inherits the native button hover surface", () => {
+  assert.match(source, /function soundcloudTrackReferenceButton\(\)/);
+  assert.match(
+    source,
+    /provider === "soundcloud" && soundcloudTrackReference[\s\S]*?soundcloudTrackReference\.cloneNode\(false\)/,
+  );
+  assert.match(source, /navidrome-add-native-soundcloud/);
+  const soundcloudButtonRule = STYLES.match(
+    /data-provider="soundcloud"\] \.navidrome-add-button \{([^}]*)\}/,
+  );
+  assert.ok(soundcloudButtonRule);
+  assert.doesNotMatch(soundcloudButtonRule[1], /background|border|box-shadow/);
   assert.match(
     STYLES,
     /data-provider="soundcloud"[^}]*flex: 0 0 40px !important[^}]*margin: 0 !important[^}]*width: 40px !important/s,
   );
   assert.match(
     STYLES,
-    /data-provider="soundcloud"[^}]*navidrome-add-button[^}]*height: 40px !important[^}]*padding: 0 !important/s,
+    /data-provider="soundcloud"[^}]*navidrome-add-button[^}]*height: 40px !important[^}]*width: 40px !important/s,
   );
   assert.match(
     STYLES,
@@ -209,22 +220,42 @@ test("YouTube control reserves its own left gutter", () => {
   );
 });
 
-test("SoundCloud and YouTube controls provide state-aware hover labels", () => {
-  assert.match(source, /function createButtonTooltip\(\)/);
+test("SoundCloud uses its native tooltip dimensions and delay", () => {
+  assert.match(source, /function createButtonTooltip\(provider\)/);
   assert.match(source, /tooltip\.textContent = text/);
   assert.match(
     STYLES,
-    /data-provider="soundcloud"[^}]*navidrome-add-tooltip[^}]*background: #181818/s,
+    /data-provider="soundcloud"[^}]*navidrome-add-tooltip[^}]*font: 500 11px\/16px[^}]*padding: 4px 8px/s,
   );
   assert.match(
     STYLES,
-    /data-provider="youtube"[^}]*navidrome-add-tooltip[^}]*font: 400 12px\/16px Roboto/s,
+    /data-provider="soundcloud"[^}]*:hover \.navidrome-add-tooltip[^}]*transition-delay: 100ms/s,
   );
+});
+
+test("YouTube renders its state label in an unclipped native-style portal", () => {
+  const youtubeTooltipRule = STYLES.match(
+    /#navidrome-userscript-add-tooltip\[data-provider="youtube"\] \{([^}]*)\}/,
+  );
+  assert.ok(youtubeTooltipRule);
+  assert.match(youtubeTooltipRule[1], /font: 400 12px\/16px Roboto/);
+  assert.match(youtubeTooltipRule[1], /position: fixed/);
+  assert.match(source, /function positionYoutubeTooltip\(button, tooltip\)/);
   assert.match(
-    STYLES,
-    /data-provider="youtube"[^}]*:hover \.navidrome-add-tooltip[^}]*visibility: visible/s,
+    source,
+    /button\.addEventListener\("mouseenter", \(\) => showTooltip\(500\)\)/,
   );
+  assert.match(source, /document\.body \|\| document\.documentElement/);
   assert.match(source, /button\.removeAttribute\("title"\)/);
+});
+
+test("a completed track remains hoverable without being added twice", () => {
+  assert.match(
+    source,
+    /button\.disabled = \["starting", "queued", "running"\]\.includes\(status\)/,
+  );
+  assert.match(source, /button\.setAttribute\("aria-disabled", "true"\)/);
+  assert.match(source, /if \(currentState\?\.status === "success"\)/);
 });
 
 test("userscript no longer depends on Chrome extension messaging", () => {

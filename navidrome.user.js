@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.8
+// @version      1.4.9
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -36,6 +36,7 @@
 
   const DEFAULT_SERVER_URL = "https://bot.music.rkde.su";
   const BUTTON_CONTAINER_ID = "navidrome-userscript-add-container";
+  const BUTTON_TOOLTIP_ID = "navidrome-userscript-add-tooltip";
   const SETTINGS_DIALOG_ID = "navidrome-userscript-settings";
   const SETTINGS_LAUNCHER_ID = "navidrome-userscript-settings-launcher";
   const RUNTIME_MARKER_ID = "navidrome-userscript-runtime";
@@ -103,7 +104,7 @@
       z-index: 2147483646;
     }
 
-    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud-player) {
+    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud):not(.navidrome-add-native-soundcloud-player) {
       align-items: center;
       appearance: none;
       background: transparent;
@@ -126,11 +127,11 @@
       width: 40px !important;
     }
 
-    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud-player):hover:not(:disabled) {
+    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud):not(.navidrome-add-native-soundcloud-player):hover:not(:disabled) {
       background: rgb(127 127 127 / 16%);
     }
 
-    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud-player):active:not(:disabled) {
+    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud):not(.navidrome-add-native-soundcloud-player):active:not(:disabled) {
       background: rgb(127 127 127 / 24%);
     }
 
@@ -144,19 +145,18 @@
       opacity: 0.84;
     }
 
-    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud-player)[data-status="success"],
-    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud-player)[data-status="error"] {
+    .navidrome-add-button[aria-disabled="true"] {
+      cursor: default;
+    }
+
+    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud):not(.navidrome-add-native-soundcloud-player)[data-status="success"],
+    .navidrome-add-button:not(.navidrome-add-native-youtube):not(.navidrome-add-native-soundcloud):not(.navidrome-add-native-soundcloud-player)[data-status="error"] {
       background: transparent;
       color: inherit;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-button {
       align-items: center !important;
-      appearance: none !important;
-      background: transparent !important;
-      border: 1px solid rgb(255 255 255 / 38%) !important;
-      border-radius: 50% !important;
-      box-shadow: none !important;
       color: inherit !important;
       display: inline-flex !important;
       font-size: 0 !important;
@@ -168,7 +168,6 @@
       max-width: 40px !important;
       min-height: 40px !important;
       min-width: 40px !important;
-      padding: 0 !important;
       position: relative !important;
       width: 40px !important;
     }
@@ -183,73 +182,61 @@
       width: 24px !important;
     }
 
-    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-button:hover:not(:disabled) {
-      background: rgb(255 255 255 / 10%);
-      border-color: rgb(255 255 255 / 55%);
-    }
-
     .navidrome-add-tooltip {
-      display: none;
+      box-sizing: border-box !important;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      white-space: nowrap;
     }
 
-    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"],
-    #${BUTTON_CONTAINER_ID}[data-provider="youtube"] {
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] {
       overflow: visible !important;
       position: relative !important;
     }
 
-    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-tooltip,
-    #${BUTTON_CONTAINER_ID}[data-provider="youtube"] .navidrome-add-tooltip {
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-tooltip {
+      background: rgb(28 28 28 / 96%);
+      border: 1px solid rgb(255 255 255 / 20%);
+      border-radius: 4px;
       bottom: calc(100% + 8px);
-      box-sizing: border-box !important;
-      display: block !important;
+      color: #fff;
+      font: 500 11px/16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       left: 50%;
-      opacity: 0;
-      pointer-events: none;
+      padding: 4px 8px;
       position: absolute !important;
-      transform: translate(-50%, 4px);
-      transition:
-        opacity 120ms ease,
-        transform 120ms ease,
-        visibility 0s linear 120ms;
-      visibility: hidden;
-      white-space: nowrap;
+      transform: translateX(-50%);
+      transition: opacity 80ms linear;
       z-index: 2147483647;
     }
 
-    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"]:hover .navidrome-add-tooltip,
-    #${BUTTON_CONTAINER_ID}[data-provider="youtube"]:hover .navidrome-add-tooltip {
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"]:hover .navidrome-add-tooltip {
       opacity: 1;
-      transform: translate(-50%, 0);
-      transition-delay: 350ms;
+      transition-delay: 100ms;
       visibility: visible;
     }
 
-    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"]:focus-within .navidrome-add-tooltip,
-    #${BUTTON_CONTAINER_ID}[data-provider="youtube"]:focus-within .navidrome-add-tooltip {
+    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"]:focus-within .navidrome-add-tooltip {
       opacity: 1;
-      transform: translate(-50%, 0);
       transition-delay: 0ms;
       visibility: visible;
     }
 
-    #${BUTTON_CONTAINER_ID}[data-provider="soundcloud"] .navidrome-add-tooltip {
-      background: #181818;
-      border: 1px solid rgb(255 255 255 / 22%);
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
-      color: #fff;
-      font: 400 14px/20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: 6px 10px;
-    }
-
-    #${BUTTON_CONTAINER_ID}[data-provider="youtube"] .navidrome-add-tooltip {
+    #${BUTTON_TOOLTIP_ID}[data-provider="youtube"] {
       background: rgb(97 97 97 / 92%);
       border-radius: 4px;
       color: #fff;
       font: 400 12px/16px Roboto, Arial, sans-serif;
-      left: calc(50% + 4px);
       padding: 8px;
+      position: fixed !important;
+      transform: translateX(-50%);
+      transition: opacity 80ms linear;
+      z-index: 2147483647;
+    }
+
+    #${BUTTON_TOOLTIP_ID}[data-provider="youtube"][data-visible="true"] {
+      opacity: 1;
+      visibility: visible;
     }
 
     #${BUTTON_CONTAINER_ID}[data-provider="soundcloud-player"] .navidrome-add-native-soundcloud-player {
@@ -776,13 +763,84 @@
     return fragment;
   }
 
-  function createButtonTooltip() {
+  function createButtonTooltip(provider) {
     const tooltip = document.createElement("span");
+    tooltip.id = BUTTON_TOOLTIP_ID;
     tooltip.className = "navidrome-add-tooltip";
-    tooltip.setAttribute("aria-hidden", "true");
+    tooltip.dataset.provider = provider;
     tooltip.setAttribute("role", "tooltip");
     tooltip.textContent = "Add to Navidrome";
     return tooltip;
+  }
+
+  function positionYoutubeTooltip(button, tooltip) {
+    const rect = button.getBoundingClientRect();
+    const halfWidth = tooltip.offsetWidth / 2;
+    const center = rect.left + rect.width / 2;
+    const left = Math.max(
+      halfWidth + 8,
+      Math.min(window.innerWidth - halfWidth - 8, center),
+    );
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${rect.bottom + 8}px`;
+  }
+
+  function attachYoutubeTooltip(button, tooltip) {
+    if (button.dataset.navidromeTooltipBound === "true") return;
+    button.dataset.navidromeTooltipBound = "true";
+    let showTimer = null;
+
+    function hideTooltip() {
+      clearTimeout(showTimer);
+      showTimer = null;
+      tooltip.dataset.visible = "false";
+    }
+
+    function showTooltip(delay) {
+      clearTimeout(showTimer);
+      positionYoutubeTooltip(button, tooltip);
+      if (!delay) {
+        tooltip.dataset.visible = "true";
+        return;
+      }
+      showTimer = setTimeout(() => {
+        if (button.isConnected && tooltip.isConnected) {
+          positionYoutubeTooltip(button, tooltip);
+          tooltip.dataset.visible = "true";
+        }
+      }, delay);
+    }
+
+    button.addEventListener("mouseenter", () => showTooltip(500));
+    button.addEventListener("mouseleave", hideTooltip);
+    button.addEventListener("focus", () => showTooltip(0));
+    button.addEventListener("blur", hideTooltip);
+  }
+
+  function ensureButtonTooltip(container, button, provider) {
+    let tooltip = document.getElementById(BUTTON_TOOLTIP_ID);
+    if (provider === "soundcloud") {
+      if (
+        tooltip?.parentElement !== container ||
+        tooltip.dataset.provider !== provider
+      ) {
+        tooltip?.remove();
+        tooltip = createButtonTooltip(provider);
+        container.append(tooltip);
+      }
+      return tooltip;
+    }
+    if (provider === "youtube") {
+      if (tooltip?.dataset.provider !== provider) {
+        tooltip?.remove();
+        tooltip = createButtonTooltip(provider);
+        (document.body || document.documentElement).append(tooltip);
+      }
+      attachYoutubeTooltip(button, tooltip);
+      return tooltip;
+    }
+    tooltip?.remove();
+    return null;
   }
 
   function visibleYoutubeMoreButton() {
@@ -796,6 +854,13 @@
   function soundcloudPlayerReferenceButton() {
     return document.querySelector(
       ".playControls.m-visible .playbackSoundBadge__actions button.sc-button-secondary",
+    );
+  }
+
+  function soundcloudTrackReferenceButton() {
+    return (
+      document.querySelector('button[aria-label="Copy link"]') ||
+      document.querySelector('button[aria-label="Share"]')
     );
   }
 
@@ -836,6 +901,11 @@
         suppressNextClick = false;
         return;
       }
+      if (currentState?.status === "success") {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       void addCurrentTrack();
     });
   }
@@ -843,7 +913,8 @@
   function createNavidromeButton(
     provider,
     youtubeMoreButton,
-    soundcloudReferenceButton,
+    soundcloudPlayerReference,
+    soundcloudTrackReference,
   ) {
     let button;
     if (provider === "youtube" && youtubeMoreButton) {
@@ -861,8 +932,19 @@
       button.removeAttribute("aria-expanded");
       button.removeAttribute("aria-haspopup");
       button.removeAttribute("aria-pressed");
-    } else if (provider === "soundcloud-player" && soundcloudReferenceButton) {
-      button = soundcloudReferenceButton.cloneNode(false);
+    } else if (provider === "soundcloud" && soundcloudTrackReference) {
+      button = soundcloudTrackReference.cloneNode(false);
+      button.classList.add(
+        "navidrome-add-button",
+        "navidrome-add-native-soundcloud",
+      );
+      button.removeAttribute("aria-describedby");
+      button.removeAttribute("aria-expanded");
+      button.removeAttribute("aria-haspopup");
+      button.removeAttribute("aria-pressed");
+      button.replaceChildren(createButtonContent());
+    } else if (provider === "soundcloud-player" && soundcloudPlayerReference) {
+      button = soundcloudPlayerReference.cloneNode(false);
       button.classList.remove(
         "playbackSoundBadge__like",
         "playbackSoundBadge__follow",
@@ -893,14 +975,19 @@
   function ensureButton() {
     if (!currentTrack) {
       document.getElementById(BUTTON_CONTAINER_ID)?.remove();
+      document.getElementById(BUTTON_TOOLTIP_ID)?.remove();
       return;
     }
 
     const youtubeMoreButton =
       currentTrack.provider === "youtube" ? visibleYoutubeMoreButton() : null;
-    const soundcloudReferenceButton =
+    const soundcloudPlayerReference =
       currentTrack.provider === "soundcloud-player"
         ? soundcloudPlayerReferenceButton()
+        : null;
+    const soundcloudTrackReference =
+      currentTrack.provider === "soundcloud"
+        ? soundcloudTrackReferenceButton()
         : null;
     let container = document.getElementById(BUTTON_CONTAINER_ID);
     const existingButton = container?.querySelector("button");
@@ -908,20 +995,28 @@
       youtubeMoreButton &&
       !existingButton?.classList.contains("navidrome-add-native-youtube");
     const needsSoundcloudNative =
-      soundcloudReferenceButton &&
+      soundcloudPlayerReference &&
       !existingButton?.classList.contains(
         "navidrome-add-native-soundcloud-player",
       );
+    const needsSoundcloudTrackNative =
+      soundcloudTrackReference &&
+      !existingButton?.classList.contains("navidrome-add-native-soundcloud");
     const hasWrongNativeButton =
       (currentTrack.provider !== "youtube" &&
         existingButton?.classList.contains("navidrome-add-native-youtube")) ||
       (currentTrack.provider !== "soundcloud-player" &&
         existingButton?.classList.contains(
           "navidrome-add-native-soundcloud-player",
-        ));
+        )) ||
+      (currentTrack.provider !== "soundcloud" &&
+        existingButton?.classList.contains("navidrome-add-native-soundcloud"));
     if (
       container &&
-      (needsYoutubeNative || needsSoundcloudNative || hasWrongNativeButton)
+      (needsYoutubeNative ||
+        needsSoundcloudNative ||
+        needsSoundcloudTrackNative ||
+        hasWrongNativeButton)
     ) {
       container.remove();
       container = null;
@@ -934,9 +1029,9 @@
         createNavidromeButton(
           currentTrack.provider,
           youtubeMoreButton,
-          soundcloudReferenceButton,
+          soundcloudPlayerReference,
+          soundcloudTrackReference,
         ),
-        createButtonTooltip(),
       );
     }
 
@@ -964,6 +1059,11 @@
         document.body.append(container);
       }
     }
+    ensureButtonTooltip(
+      container,
+      container.querySelector("button"),
+      currentTrack.provider,
+    );
     renderState();
     markRuntime("ready");
   }
@@ -973,18 +1073,19 @@
     if (!button) return;
 
     const label = button.querySelector(".navidrome-add-label");
-    const tooltip = document.querySelector(
-      `#${BUTTON_CONTAINER_ID} > .navidrome-add-tooltip`,
-    );
+    const tooltip = document.getElementById(BUTTON_TOOLTIP_ID);
     const status = currentState?.status || "idle";
     button.dataset.status = status;
     button.classList.toggle(
       "navidrome-add-loading",
       ["starting", "queued", "running"].includes(status),
     );
-    button.disabled = ["starting", "queued", "running", "success"].includes(
-      status,
-    );
+    button.disabled = ["starting", "queued", "running"].includes(status);
+    if (status === "success") {
+      button.setAttribute("aria-disabled", "true");
+    } else {
+      button.removeAttribute("aria-disabled");
+    }
     let text = "Add to Navidrome";
     let title = "";
 
@@ -1422,6 +1523,7 @@
     clearInterval(pollTimer);
     pollTimer = null;
     document.getElementById(BUTTON_CONTAINER_ID)?.remove();
+    document.getElementById(BUTTON_TOOLTIP_ID)?.remove();
     if (!currentTrack) {
       markRuntime("idle");
       return;
