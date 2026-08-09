@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Add to Navidrome
 // @namespace    https://github.com/rakkateichou/navidrome-userscript
-// @version      1.4.4
+// @version      1.4.5
 // @description  Add the current YouTube, YouTube Music, or SoundCloud track to Navidrome.
 // @author       rakkateichou
 // @homepageURL  https://github.com/rakkateichou/navidrome-userscript
@@ -18,11 +18,9 @@
 // @run-at       document-idle
 // @sandbox      DOM
 // @inject-into  content
-// @grant        GM.addStyle
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
-// @grant        GM_addStyle
 // @grant        GM_addValueChangeListener
 // @grant        GM_getValue
 // @grant        GM_info
@@ -41,6 +39,7 @@
   const SETTINGS_DIALOG_ID = "navidrome-userscript-settings";
   const SETTINGS_LAUNCHER_ID = "navidrome-userscript-settings-launcher";
   const RUNTIME_MARKER_ID = "navidrome-userscript-runtime";
+  const STYLE_ELEMENT_ID = "navidrome-userscript-styles";
   const CONFIG_KEY = "navidromeConfig";
   const TRACK_STATES_KEY = "navidromeTrackStates";
   const POLL_INTERVAL_MS = 2500;
@@ -446,9 +445,6 @@
   function legacyGmMethod(name) {
     let lexicalMethod = null;
     switch (name) {
-      case "GM_addStyle":
-        lexicalMethod = typeof GM_addStyle === "function" ? GM_addStyle : null;
-        break;
       case "GM_addValueChangeListener":
         lexicalMethod =
           typeof GM_addValueChangeListener === "function"
@@ -492,16 +488,17 @@
     return globalThis.GM_info || null;
   }
 
-  async function addUserscriptStyle(css) {
-    const addStyle =
-      modernGmMethod("addStyle") || legacyGmMethod("GM_addStyle");
-    if (!addStyle) {
-      const style = document.createElement("style");
-      style.textContent = css;
+  function ensureDocumentStyle(css) {
+    let style = document.getElementById(STYLE_ELEMENT_ID);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = STYLE_ELEMENT_ID;
       (document.head || document.documentElement).append(style);
-      return;
     }
-    await Promise.resolve(addStyle(css));
+    if (style.textContent !== css) {
+      style.textContent = css;
+    }
+    return style;
   }
 
   function userscriptRequest(details) {
@@ -1388,7 +1385,7 @@
 
   function bootstrap() {
     markRuntime("booting");
-    void addUserscriptStyle(STYLES).catch(reportRuntimeError);
+    ensureDocumentStyle(STYLES);
     if (window.top === window) {
       registerSettingsMenu();
       void refreshSettingsLauncher().catch(reportRuntimeError);
@@ -1419,6 +1416,7 @@
       STYLES,
       buttonMarkup,
       cleanServerUrl,
+      ensureDocumentStyle,
       hasUserscriptStorageApi,
       soundcloudTrackUrl,
       stateFromJob,

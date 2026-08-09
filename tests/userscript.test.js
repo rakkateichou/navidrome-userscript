@@ -9,13 +9,14 @@ const {
   STYLES,
   buttonMarkup,
   cleanServerUrl,
+  ensureDocumentStyle,
   hasUserscriptStorageApi,
   soundcloudTrackUrl,
   stateFromJob,
 } = require(scriptPath);
 
 test("userscript metadata supports all three sites and automatic updates", () => {
-  assert.match(source, /@version\s+1\.4\.4/);
+  assert.match(source, /@version\s+1\.4\.5/);
   assert.match(source, /@match\s+https:\/\/www\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/music\.youtube\.com\/\*/);
   assert.match(source, /@match\s+https:\/\/soundcloud\.com\/\*/);
@@ -52,6 +53,40 @@ test("supports both modern Safari and legacy userscript storage APIs", () => {
     if (savedLegacyGetValue === undefined) delete globalThis.GM_getValue;
     else globalThis.GM_getValue = savedLegacyGetValue;
   }
+});
+
+test("injects one identified stylesheet into the current document", () => {
+  const savedDocument = globalThis.document;
+  const elements = new Map();
+  const head = {
+    append(element) {
+      elements.set(element.id, element);
+    },
+  };
+  try {
+    globalThis.document = {
+      head,
+      documentElement: head,
+      getElementById(id) {
+        return elements.get(id) || null;
+      },
+      createElement(tagName) {
+        return { id: "", tagName: tagName.toUpperCase(), textContent: "" };
+      },
+    };
+
+    const first = ensureDocumentStyle("first stylesheet");
+    const second = ensureDocumentStyle("updated stylesheet");
+
+    assert.equal(first, second);
+    assert.equal(first.id, "navidrome-userscript-styles");
+    assert.equal(first.textContent, "updated stylesheet");
+    assert.equal(elements.size, 1);
+  } finally {
+    if (savedDocument === undefined) delete globalThis.document;
+    else globalThis.document = savedDocument;
+  }
+  assert.doesNotMatch(source, /GM\.addStyle|GM_addStyle/);
 });
 
 test("detects the lexical GM object used by Userscripts Safari", () => {

@@ -26,6 +26,8 @@ In Safari's extension settings, give Userscripts access to YouTube, YouTube Musi
 
 Userscripts for Safari does not expose the per-script menu used by Tampermonkey. Before a token is saved, this script therefore shows a **Set up Navidrome** button in the lower-right corner of supported sites, and the site control uses a settings icon. Saving the connection does not add the currently open track. After setup, press and hold or right-click the site's Navidrome music-note button whenever you need to change the connection.
 
+SoundCloud renders its modern track page in a same-origin `/n/` frame. The script installs one identified stylesheet directly into every document where Userscripts injects it, so the track control and connection dialog remain styled even when Safari cannot target that frame through the userscript styling API.
+
 If the button never appears, first recheck **Allow User Scripts** and that the script itself is enabled. Chrome does not run any Tampermonkey userscripts until that extra permission is granted.
 
 The script requests an isolated DOM sandbox so YouTube's page-level Trusted Types policy cannot block construction of the injected controls.
